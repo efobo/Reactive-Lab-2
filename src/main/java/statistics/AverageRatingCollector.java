@@ -35,7 +35,7 @@ public class AverageRatingCollector implements Collector<Product, Map<Manufactur
             AverageRatingAccumulator accumulator = map.get(manufacturer);
 
             if (accumulator != null) { // Убедимся, что производитель существует
-                product.getReviews().forEach(review -> accumulator.addRating(review.getRating()));
+                product.getReviewsWithDelay(1000).forEach(review -> accumulator.addRating(review.getRating()));
             }
         };
     }

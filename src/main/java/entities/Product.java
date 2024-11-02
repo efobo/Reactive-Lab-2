@@ -20,7 +20,13 @@ public class Product {
     private Manufacturer manufacturer; // record
     private List<Review> reviews; // коллекция
 
-    public List<Review> getReviews(long delay) {
-        return reviews;
+
+    public List<Review> getReviewsWithDelay(long delay) {
+        try {
+            Thread.sleep(delay);
+            return reviews;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

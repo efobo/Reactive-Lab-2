@@ -20,7 +20,7 @@ public class Calculation {
 
             for (Product product : products) {
                 if (product.getManufacturer().equals(manufacturer)) {
-                    for (Review review : product.getReviews()) {
+                    for (Review review : product.getReviewsWithDelay(1000)) {
                         totalRating += review.getRating();
                         totalReviews++;
                     }
@@ -41,7 +41,7 @@ public class Calculation {
                         manufacturer -> {
                             List<Review> reviews = products.stream()
                                     .filter(product -> product.getManufacturer().equals(manufacturer))
-                                    .flatMap(product -> product.getReviews().stream())
+                                    .flatMap(product -> product.getReviewsWithDelay(1000).stream())
                                     .toList();
 
                             return reviews.isEmpty() ? 0.0 : reviews.stream()
