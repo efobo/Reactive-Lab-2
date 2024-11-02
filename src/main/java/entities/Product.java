@@ -20,7 +20,6 @@ public class Product {
     private Manufacturer manufacturer; // record
     private List<Review> reviews; // коллекция
 
-
     public List<Review> getReviewsWithDelay(long delay) {
         try {
             Thread.sleep(delay);
