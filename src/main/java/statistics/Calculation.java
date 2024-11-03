@@ -20,7 +20,7 @@ public class Calculation {
 
             for (Product product : products) {
                 if (product.getManufacturer().equals(manufacturer)) {
-                    for (Review review : product.getReviewsWithDelay(1000)) {
+                    for (Review review : product.getReviewsWithDelay(1)) {
                         totalRating += review.getRating();
                         totalReviews++;
                     }
@@ -35,13 +35,13 @@ public class Calculation {
 
     // Конвейер с помощью Stream API на базе коллекторов из стандартной библиотеки
     public static Map<Manufacturer, Double> avgRatingWithPipeline(List<Product> products, List<Manufacturer> manufacturers) {
-        return manufacturers.stream()
+        return manufacturers.parallelStream()
                 .collect(Collectors.toMap(
                         manufacturer -> manufacturer,
                         manufacturer -> {
                             List<Review> reviews = products.stream()
                                     .filter(product -> product.getManufacturer().equals(manufacturer))
-                                    .flatMap(product -> product.getReviewsWithDelay(1000).stream())
+                                    .flatMap(product -> product.getReviewsWithDelay(1).stream())
                                     .toList();
 
                             return reviews.isEmpty() ? 0.0 : reviews.stream()
@@ -54,7 +54,7 @@ public class Calculation {
 
     // Собственный коллектор
     public static Map<Manufacturer, Double> avgRatingWithCollector(List<Product> products, List<Manufacturer> manufacturers) {
-        return products.stream()
+        return products.parallelStream()
                 .collect(new AverageRatingCollector(manufacturers));
     }
 

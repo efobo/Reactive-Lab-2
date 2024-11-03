@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class BenchmarkCalculation {
-    @Param({"5", "50", "250"})
+    @Param({"5000", "50000", "250000"})
     private int productCount;
 
     private List<Manufacturer> manufacturers;
@@ -28,7 +28,7 @@ public class BenchmarkCalculation {
     public void generate() {
         int manufacturerCount = 3;
         int reviewCount = 10;
-        int productCount = 250;
+        //int productCount = 250000;
 
         System.out.printf("Generating %d manufacturers... ", manufacturerCount);
 
@@ -46,10 +46,8 @@ public class BenchmarkCalculation {
 
     @Benchmark
     public Map<Manufacturer, Double> calculateAvgRating() {
-        List<Product> firstNProducts = products.subList(0, productCount);
-        System.out.println("BEFORE");
-        Map<Manufacturer, Double> result = Calculation.avgRatingWithPipeline(firstNProducts, manufacturers);
-        System.out.println("AFTER");
+        //List<Product> firstNProducts = products.subList(0, productCount);
+        Map<Manufacturer, Double> result = Calculation.avgRatingWithPipeline(products, manufacturers);
         return result;
         //Map<Manufacturer, Double> avgRatingWithPipeline = Calculation.avgRatingWithPipeline(products, manufacturers);
         //Map<Manufacturer, Double> avgRatingWithCollector = Calculation.avgRatingWithCollector(products, manufacturers);
