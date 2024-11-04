@@ -89,6 +89,12 @@ public class BenchmarkCalculation {
     }
 
     @Benchmark
+    @Group("ParallelStreamNoDelay")
+    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorSpliteratorNoDelayParallel() {
+        return Calculation.avgRatingWithCollectorParallelSpliterator(products, manufacturers, 0);
+    }
+
+    @Benchmark
     @Group("ParallelStreamWithDelay")
     public Map<Manufacturer, Double> calculateAvgRatingWithPipelineWithDelayParallel() {
         return Calculation.avgRatingWithPipelineParallel(products, manufacturers, 1);
@@ -98,5 +104,11 @@ public class BenchmarkCalculation {
     @Group("ParallelStreamWithDelay")
     public Map<Manufacturer, Double> calculateAvgRatingWithCollectorWithDelayParallel() {
         return Calculation.avgRatingWithCollector(products, manufacturers, 1);
+    }
+
+    @Benchmark
+    @Group("ParallelStreamWithDelay")
+    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorSpliteratorWithDelayParallel() {
+        return Calculation.avgRatingWithCollectorParallelSpliterator(products, manufacturers, 1);
     }
 }

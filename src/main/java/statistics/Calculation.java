@@ -7,6 +7,7 @@ import entities.Review;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class Calculation {
 
@@ -47,6 +48,7 @@ public class Calculation {
                 ));
     }
 
+
     // Собственный коллектор
     public static Map<Manufacturer, Double> avgRatingWithCollector(List<Product> products, List<Manufacturer> manufacturers, long delay) {
         return products.stream()
@@ -57,6 +59,13 @@ public class Calculation {
         return products.parallelStream()
                 .collect(new AverageRatingCollector(manufacturers, delay));
     }
+
+    public static Map<Manufacturer, Double> avgRatingWithCollectorParallelSpliterator(List<Product> products, List<Manufacturer> manufacturers, long delay) {
+        ProductSpliterator productSpliterator = new ProductSpliterator(products);
+        return StreamSupport.stream(productSpliterator, true)
+                .collect(new AverageRatingCollector(manufacturers, delay));
+    }
+
 
     public static void printResult(Map<Manufacturer, Double> result) {
         for (Manufacturer manufacturer : result.keySet()) {
