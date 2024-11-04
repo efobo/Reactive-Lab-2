@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AverageRatingCollector implements Collector<Product, Map<Manufacturer, AverageRatingAccumulator>, Map<Manufacturer, Double>> {
     private final List<Manufacturer> manufacturers;
+    private final long delay;
 
     @Override
     public Supplier<Map<Manufacturer, AverageRatingAccumulator>> supplier() {
@@ -35,7 +36,7 @@ public class AverageRatingCollector implements Collector<Product, Map<Manufactur
             AverageRatingAccumulator accumulator = map.get(manufacturer);
 
             if (accumulator != null) { // Убедимся, что производитель существует
-                product.getReviewsWithDelay(1).forEach(review -> accumulator.addRating(review.getRating()));
+                product.getReviewsWithDelay(delay).forEach(review -> accumulator.addRating(review.getRating()));
             }
         };
     }

@@ -23,7 +23,7 @@ public class Product {
     public List<Review> getReviewsWithDelay(long delay) {
         try {
             Thread.sleep(delay);
-            return reviews;
+            return getReviews();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
