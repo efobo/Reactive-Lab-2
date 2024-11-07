@@ -12,57 +12,52 @@ import java.util.stream.StreamSupport;
 public class Calculation {
 
     // Конвейер с помощью Stream API на базе коллекторов из стандартной библиотеки
-    public static Map<Manufacturer, Double> avgRatingWithPipeline(List<Product> products, List<Manufacturer> manufacturers, long delay) {
-        return manufacturers.stream()
-                .collect(Collectors.toMap(
-                        manufacturer -> manufacturer,
-                        manufacturer -> {
-                            List<Review> reviews = products.stream()
-                                    .filter(product -> product.getManufacturer().equals(manufacturer))
-                                    .flatMap(product -> product.getReviewsWithDelay(delay).stream())
-                                    .toList();
-
-                            return reviews.isEmpty() ? 0.0 : reviews.stream()
-                                    .mapToInt(Review::getRating)
-                                    .average()
-                                    .orElse(0.0);
-                        }
+    public static Map<Manufacturer, Double> avgRatingWithSeqPipeline(List<Product> products, long delay) {
+        return products.stream()
+                .collect(Collectors.groupingBy(
+                        Product::getManufacturer,
+                        Collectors.flatMapping(
+                                product -> product.getReviewsWithDelay(delay).stream(),
+                                Collectors.averagingDouble(Review::getRating)
+                        )
                 ));
     }
 
-    public static Map<Manufacturer, Double> avgRatingWithPipelineParallel(List<Product> products, List<Manufacturer> manufacturers, long delay) {
-        return manufacturers.parallelStream()
-                .collect(Collectors.toMap(
-                        manufacturer -> manufacturer,
-                        manufacturer -> {
-                            List<Review> reviews = products.stream()
-                                    .filter(product -> product.getManufacturer().equals(manufacturer))
-                                    .flatMap(product -> product.getReviewsWithDelay(delay).stream())
-                                    .toList();
-
-                            return reviews.isEmpty() ? 0.0 : reviews.stream()
-                                    .mapToInt(Review::getRating)
-                                    .average()
-                                    .orElse(0.0);
-                        }
+    public static Map<Manufacturer, Double> avgRatingWithParPipeline(List<Product> products, long delay) {
+        return products.parallelStream()
+                .collect(Collectors.groupingByConcurrent(
+                        Product::getManufacturer,
+                        Collectors.flatMapping(
+                                product -> product.getReviewsWithDelay(delay).parallelStream(),
+                                Collectors.averagingDouble(Review::getRating)
+                        )
                 ));
     }
 
+    public static Map<Manufacturer, Double> avgRatingWithOptParPipeline(List<Product> products, long delay) {
+        return StreamSupport.stream(new ProductSpliterator(products), true)
+                .collect(Collectors.groupingByConcurrent(
+                        Product::getManufacturer,
+                        Collectors.flatMapping(
+                                product -> product.getReviewsWithDelay(delay).parallelStream(),
+                                Collectors.averagingDouble(Review::getRating)
+                        )
+                ));
+    }
 
     // Собственный коллектор
-    public static Map<Manufacturer, Double> avgRatingWithCollector(List<Product> products, List<Manufacturer> manufacturers, long delay) {
+    public static Map<Manufacturer, Double> avgRatingWithSeqCollector(List<Product> products, List<Manufacturer> manufacturers, long delay) {
         return products.stream()
                 .collect(new AverageRatingCollector(manufacturers, delay));
     }
 
-    public static Map<Manufacturer, Double> avgRatingWithCollectorParallel(List<Product> products, List<Manufacturer> manufacturers, long delay) {
+    public static Map<Manufacturer, Double> avgRatingWithParCollector(List<Product> products, List<Manufacturer> manufacturers, long delay) {
         return products.parallelStream()
                 .collect(new AverageRatingCollector(manufacturers, delay));
     }
 
-    public static Map<Manufacturer, Double> avgRatingWithCollectorParallelSpliterator(List<Product> products, List<Manufacturer> manufacturers, long delay) {
-        ProductSpliterator productSpliterator = new ProductSpliterator(products);
-        return StreamSupport.stream(productSpliterator, true)
+    public static Map<Manufacturer, Double> avgRatingWithOptParCollector(List<Product> products, List<Manufacturer> manufacturers, long delay) {
+        return StreamSupport.stream(new ProductSpliterator(products), true)
                 .collect(new AverageRatingCollector(manufacturers, delay));
     }
 

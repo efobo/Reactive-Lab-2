@@ -11,25 +11,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@State(Scope.Benchmark)
-@BenchmarkMode(Mode.AverageTime)
-@Warmup(iterations = 0)
 @Fork(1)
-@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Threads(8)
+@State(Scope.Benchmark)
+@Warmup(iterations = 0)
+@Measurement(iterations = 3, time = 1)
+@BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class BenchmarkCalculation {
-    @Param({"5000", "50000", "250000"})
+    @Param({"5000", "25000", "50000"})
     private int productCount;
 
     private List<Manufacturer> manufacturers;
     private List<Product> products;
 
-    @Setup(Level.Trial)
+    @Setup(Level.Trial) // Вызовется в начале всего теста, всего тестов 3 (поскольку 3 разных productCount)
     public void generate() {
         int manufacturerCount = 3;
         int reviewCount = 10;
 
-        System.out.printf("Generating %d manufacturers... ", manufacturerCount);
+        System.out.printf("\nGenerating %d manufacturers... ", manufacturerCount);
 
         ManufacturerGenerator manufacturerGenerator = new ManufacturerGenerator();
         manufacturers = manufacturerGenerator.generateList(manufacturerCount);
@@ -43,72 +44,81 @@ public class BenchmarkCalculation {
         System.out.println("Done.");
     }
 
-//    @Benchmark
-//    public Map<Manufacturer, Double> calculateAvgRating() {
-//        //List<Product> firstNProducts = products.subList(0, productCount);
-//        Map<Manufacturer, Double> result = Calculation.avgRatingWithPipeline(products, manufacturers);
-//        return result;
-//        //Map<Manufacturer, Double> avgRatingWithPipeline = Calculation.avgRatingWithPipeline(products, manufacturers);
-//        //Map<Manufacturer, Double> avgRatingWithCollector = Calculation.avgRatingWithCollector(products, manufacturers);
-//    }
+    // ПОСЛЕДОВАТЕЛЬНЫЕ СТРИМЫ
 
     @Benchmark
-    @Group("СonsistentStreamNoDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithPipelineNoDelay() {
-        return Calculation.avgRatingWithPipeline(products, manufacturers, 0);
+    @Group("_1_SequentialStreamNoDelay")
+    public Map<Manufacturer, Double> seqCollectorNoDelay() {
+        return Calculation.avgRatingWithSeqCollector(products, manufacturers, 0);
+    }
+
+    @Benchmark()
+    @Group("_1_SequentialStreamNoDelay")
+    public Map<Manufacturer, Double> seqPipelineNoDelay() {
+        return Calculation.avgRatingWithSeqPipeline(products, 0);
     }
 
     @Benchmark
-    @Group("СonsistentStreamNoDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorNoDelay() {
-        return Calculation.avgRatingWithCollector(products, manufacturers, 0);
+    @Group("_1_SequentialStreamWithDelay")
+    public Map<Manufacturer, Double> seqCollectorWithDelay() {
+        return Calculation.avgRatingWithSeqCollector(products, manufacturers, 1);
     }
 
     @Benchmark
-    @Group("СonsistentStreamWithDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithPipelineWithDelay() {
-        return Calculation.avgRatingWithPipeline(products, manufacturers, 1);
+    @Group("_1_SequentialStreamWithDelay")
+    public Map<Manufacturer, Double> seqPipelineWithDelay() {
+        return Calculation.avgRatingWithSeqPipeline(products, 1);
+    }
+
+    // ПАРАЛЛЕЛЬНЫЕ СТРИМЫ
+
+    @Benchmark
+    @Group("_2_ParallelStreamNoDelay")
+    public Map<Manufacturer, Double> parCollectorNoDelay() {
+        return Calculation.avgRatingWithParCollector(products, manufacturers, 0);
     }
 
     @Benchmark
-    @Group("СonsistentStreamWithDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorWithDelay() {
-        return Calculation.avgRatingWithCollector(products, manufacturers, 1);
+    @Group("_2_ParallelStreamNoDelay")
+    public Map<Manufacturer, Double> parPipelineNoDelay() {
+        return Calculation.avgRatingWithParPipeline(products, 0);
     }
 
     @Benchmark
-    @Group("ParallelStreamNoDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithPipelineNoDelayParallel() {
-        return Calculation.avgRatingWithPipeline(products, manufacturers, 0);
+    @Group("_2_ParallelStreamWithDelay")
+    public Map<Manufacturer, Double> parCollectorWithDelay() {
+        return Calculation.avgRatingWithParCollector(products, manufacturers, 1);
     }
 
     @Benchmark
-    @Group("ParallelStreamNoDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorNoDelayParallel() {
-        return Calculation.avgRatingWithCollectorParallel(products, manufacturers, 0);
+    @Group("_2_ParallelStreamWithDelay")
+    public Map<Manufacturer, Double> parPipelineWithDelay() {
+        return Calculation.avgRatingWithParPipeline(products, 1);
+    }
+
+    // ОПТИМИЗИРОВАННЫЕ ПАРАЛЛЕЛЬНЫЕ СТРИМЫ (СО СПЛИТЕРАТОРОМ)
+
+    @Benchmark
+    @Group("_3_OptimizedParallelStreamNoDelay")
+    public Map<Manufacturer, Double> optParCollectorNoDelay() {
+        return Calculation.avgRatingWithOptParCollector(products, manufacturers, 0);
     }
 
     @Benchmark
-    @Group("ParallelStreamNoDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorSpliteratorNoDelayParallel() {
-        return Calculation.avgRatingWithCollectorParallelSpliterator(products, manufacturers, 0);
+    @Group("_3_OptimizedParallelStreamNoDelay")
+    public Map<Manufacturer, Double> optParPipelineNoDelay() {
+        return Calculation.avgRatingWithParPipeline(products, 0);
     }
 
     @Benchmark
-    @Group("ParallelStreamWithDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithPipelineWithDelayParallel() {
-        return Calculation.avgRatingWithPipelineParallel(products, manufacturers, 1);
+    @Group("_3_OptimizedParallelStreamWithDelay")
+    public Map<Manufacturer, Double> optParCollectorWithDelay() {
+        return Calculation.avgRatingWithOptParCollector(products, manufacturers, 1);
     }
 
     @Benchmark
-    @Group("ParallelStreamWithDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorWithDelayParallel() {
-        return Calculation.avgRatingWithCollector(products, manufacturers, 1);
-    }
-
-    @Benchmark
-    @Group("ParallelStreamWithDelay")
-    public Map<Manufacturer, Double> calculateAvgRatingWithCollectorSpliteratorWithDelayParallel() {
-        return Calculation.avgRatingWithCollectorParallelSpliterator(products, manufacturers, 1);
+    @Group("_3_OptimizedParallelStreamWithDelay")
+    public Map<Manufacturer, Double> optParPipelineWithDelay() {
+        return Calculation.avgRatingWithOptParPipeline(products, 1);
     }
 }

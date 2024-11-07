@@ -1,18 +1,16 @@
 package statistics;
 
 import entities.Product;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+@RequiredArgsConstructor
 public class ProductSpliterator implements Spliterator<Product> {
     private final List<Product> products;
     private int current = 0;
-
-    public ProductSpliterator(List<Product> products) {
-        this.products = products;
-    }
 
     @Override
     public boolean tryAdvance(Consumer<? super Product> action) {
